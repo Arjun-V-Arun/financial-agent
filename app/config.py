@@ -17,14 +17,15 @@ CHROMA_DIR = ARTIFACTS_DIR / "chroma"
 SUMMARIES_PATH = ARTIFACTS_DIR / "doc_summaries.json"
 
 # --- LLM ---
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
-MODEL = os.getenv("MODEL", "gemini-2.5-flash")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq")
+MODEL = os.getenv("MODEL", "llama-3.3-70b-versatile")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
-if not GEMINI_API_KEY:
+if not GROQ_API_KEY:
     raise RuntimeError(
-        "GEMINI_API_KEY is not set. Copy .env.example to .env and add your key "
-        "from https://aistudio.google.com/apikey"
+        "GROQ_API_KEY is not set. Copy .env.example to .env and add your key "
+        "from https://console.groq.com"
     )
 
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)

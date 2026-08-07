@@ -7,8 +7,6 @@ __pycache__/
 .env
 
 # Inputs and derived artifacts (regenerable)
-data/raw/*
-!data/raw/.gitkeep
 artifacts/*
 !artifacts/.gitkeep
 
