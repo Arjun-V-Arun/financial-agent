@@ -64,11 +64,13 @@ def table_lines(df: pd.DataFrame) -> list[str]:
             if line]
 
 
-def chunks_from_sheet(df, name, title, src, doc_type, period, label):
+def chunks_from_sheet(df, name, title, src, doc_type, period, label, index_no):
     """Classify one sheet and emit one or more chunks."""
     rows, cols = df.shape
     longest = max((len(str(v)) for v in df.values.flatten()), default=0)
-    slug = re.sub(r"[^a-z0-9]+", "_", name.lower())[:30]
+    # Sheet position guarantees uniqueness; the slug is for readability only.
+    slug = re.sub(r"[^a-z0-9]+", "_", name.lower())[-30:].strip("_")
+    slug = f"s{index_no:02d}_{slug}"
 
     def make(body: str, content_type: str, suffix: str = "") -> Chunk:
         return Chunk(
@@ -114,14 +116,15 @@ def ingest_workbook(path: Path) -> list[Chunk]:
 
     book = pd.ExcelFile(path)
     out = []
-    for name in book.sheet_names:
+    for index_no, name in enumerate(book.sheet_names):
         if name.lower().strip().endswith(DUPLICATE_SUFFIXES):
             continue
         df = book.parse(name, header=None)
         title = sheet_title(df, name)
         label = HR_COMP if is_hr else label_for(title)
         out.extend(
-            chunks_from_sheet(df, name, title, path, doc_type, period, label)
+            chunks_from_sheet(df, name, title, path, doc_type, period,
+                              label, index_no)
         )
     return out
 
