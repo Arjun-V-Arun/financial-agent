@@ -6,9 +6,10 @@ __pycache__/
 # Secrets — never commit
 .env
 
-# Inputs and derived artifacts (regenerable)
-artifacts/*
-!artifacts/.gitkeep
+# Derived artifacts are committed (see docs/DESIGN_DECISIONS.md) so the
+# deployed app starts with a ready index instead of rebuilding on a
+# resource-constrained container. Regenerate locally with:
+#   python -m app.ingest && python -m app.facts && python -m app.embed
 
 # OS / editor noise
 .DS_Store

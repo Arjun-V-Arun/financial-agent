@@ -22,6 +22,15 @@ when it routes safely between these complementary tools.
 Chunks, embeddings, and facts are generated artifacts. Rebuilding from source
 is safer than manually repairing an index whose data and metadata may disagree.
 
+They're committed to the repo despite being derived, though: a deployed
+instance starts from a container with no local history and constrained
+resources, and rebuilding there means downloading an embedding model and
+re-parsing every source document on a cold start. Shipping the already-built
+`artifacts/` directory trades repo purity for a deployment that starts
+immediately with the exact index that was tested. `python -m app.ingest &&
+python -m app.facts && python -m app.embed` still regenerates it identically
+from source at any time.
+
 ## 5. Stable IDs enable provenance and learning
 
 Chunk IDs connect ingestion, Chroma, citations, tests, and feedback. Without a

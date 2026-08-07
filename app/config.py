@@ -6,6 +6,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# chromadb requires sqlite3 >= 3.35. Some Linux deployment containers (e.g.
+# Streamlit Community Cloud) ship an older system sqlite3 than the Python
+# stdlib module wraps. If the pysqlite3-binary wheel is installed, swap it in
+# before anything imports chromadb; harmless no-op where the system sqlite3
+# is already new enough (Windows, most local dev).
+try:
+    __import__("pysqlite3")
+    sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+except ImportError:
+    pass
+
 # Windows consoles default to cp1252, which can't encode punctuation the
 # model routinely emits (narrow no-break spaces, non-breaking hyphens).
 # Both the CLI and the Streamlit server print/log through this process's
