@@ -109,6 +109,18 @@ def chunks_from_sheet(df, name, title, src, doc_type, period, label, index_no):
     return []
 
 
+HR_TITLES = {
+    "Headcount": (
+        "Employee headcount, attrition and open roles by function and region "
+        "(internal HR data, restricted)"
+    ),
+    "Compensation Bands": (
+        "Employee salary bands, equity grants and bonus targets by function "
+        "(internal compensation data, restricted)"
+    ),
+}
+
+
 def ingest_workbook(path: Path) -> list[Chunk]:
     is_hr = "hr_" in path.name
     doc_type = "HR" if is_hr else "10-Q"
@@ -120,7 +132,10 @@ def ingest_workbook(path: Path) -> list[Chunk]:
         if name.lower().strip().endswith(DUPLICATE_SUFFIXES):
             continue
         df = book.parse(name, header=None)
-        title = sheet_title(df, name)
+        # HR sheets are pure numbers; a descriptive title gives the
+        # embedding something a natural-language query can match.
+        title = HR_TITLES.get(name) if is_hr else None
+        title = title or sheet_title(df, name)
         label = HR_COMP if is_hr else label_for(title)
         out.extend(
             chunks_from_sheet(df, name, title, path, doc_type, period,

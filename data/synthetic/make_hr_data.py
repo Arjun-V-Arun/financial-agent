@@ -52,13 +52,16 @@ def compensation_rows():
             })
     return pd.DataFrame(rows)
 
-
 def write_sheet(writer, name, df):
-    """Banner in row 1, data below — so the warning survives any parse."""
-    pd.DataFrame([[BANNER]]).to_excel(
-        writer, sheet_name=name, index=False, header=False
-    )
-    df.to_excel(writer, sheet_name=name, index=False, startrow=2)
+    """Banner as a trailing column, not a leading row.
+
+    Row 1 becomes the title during ingestion and would then dominate
+    every chunk's embedding. A column keeps the provenance marker
+    present without crowding out the actual content.
+    """
+    out = df.copy()
+    out["source_note"] = "SYNTHETIC - not real Apple data"
+    out.to_excel(writer, sheet_name=name, index=False)
 
 
 def main():
