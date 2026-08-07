@@ -58,6 +58,18 @@ def row_to_line(row) -> str:
     cells = [str(v).strip() for v in row if not pd.isna(v)]
     return " | ".join(cells)
 
+def _distinctive_terms(lines: list[str], limit: int = 12) -> str:
+    """Non-numeric cell values in this window — the vocabulary a natural
+    language query would actually use (function names, regions, periods)."""
+    seen = []
+    for line in lines:
+        for cell in line.split("|"):
+            cell = cell.strip()
+            if (cell and not cell.replace(".", "").replace("-", "").isdigit()
+                    and cell not in seen and len(cell) > 2):
+                seen.append(cell)
+    return ", ".join(seen[:limit])
+
 
 def table_lines(df: pd.DataFrame) -> list[str]:
     return [line for line in (row_to_line(r) for r in df.itertuples(index=False))
@@ -103,9 +115,15 @@ def chunks_from_sheet(df, name, title, src, doc_type, period, label, index_no):
             window = data[i:i + TABLE_WINDOW_ROWS]
             part = i // TABLE_WINDOW_ROWS + 1
             body = "\n".join([header] + window)
-            out.append(make(body, "table", f"_p{part}"))
+            chunk = make(body, "table", f"_p{part}")
+            # Surface distinctive values from this window into the text so
+            # the embedding differs from sibling windows of the same table.
+            terms = _distinctive_terms(window)
+            if terms:
+                chunk.text = f"{title}\nCovers: {terms}\n\n{body}"
+            out.append(chunk)
         return out
-
+    
     return []
 
 

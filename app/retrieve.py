@@ -40,17 +40,19 @@ def _collection():
     return client.get_collection(COLLECTION)
 
 
-def search(query: str, allowed_labels: list[str], k: int = 5) -> list[Hit]:
-    """Return the k most similar chunks the caller is permitted to see."""
-    if not allowed_labels:
-        return []                      # deny by default: no grants, no results
+def search(query: str, policy, k: int = 5) -> list[Hit]:
+    """Return the k most similar chunks this policy permits.
 
+    Takes a Policy, not a label list: the caller cannot construct a
+    permissive filter by hand, and every call site is forced to name
+    whose access it is acting under.
+    """
     vector = _model().encode([query]).tolist()
 
     result = _collection().query(
         query_embeddings=vector,
         n_results=k,
-        where={"sensitivity_label": {"$in": allowed_labels}},
+        where=policy.chroma_filter(),
     )
 
     hits = []
@@ -60,6 +62,8 @@ def search(query: str, allowed_labels: list[str], k: int = 5) -> list[Hit]:
         result["distances"][0],
         result["metadatas"][0],
     ):
+        if not policy.permits_period(meta["fiscal_period"]):
+            continue                   # second layer: period isn't a Chroma filter
         hits.append(Hit(
             chunk_id=chunk_id,
             text=text,
@@ -73,14 +77,14 @@ def search(query: str, allowed_labels: list[str], k: int = 5) -> list[Hit]:
 
 
 if __name__ == "__main__":
-    from app.schema import ALL_LABELS
+    from app import policy as policy_mod
 
-    for query in [
-        "What was total net sales in fiscal 2025?",
-        "How many people work in Engineering?",
-    ]:
-        print(f"\n{'=' * 70}\nQ: {query}")
-        for hit in search(query, sorted(ALL_LABELS), k=3):
-            print(f"  {hit.score}  [{hit.sensitivity_label}] "
-                  f"{hit.source_file} {hit.location}")
-            print(f"         {hit.text[:90].replace(chr(10), ' ')}")
+    question = "How many people work in Engineering?"
+    for role in policy_mod.roles():
+        pol = policy_mod.load(role)
+        print(f"\n{'=' * 70}\n{role}: {question}")
+        hits = search(question, pol, k=3)
+        if not hits:
+            print("  (no permitted results)")
+        for h in hits:
+            print(f"  {h.score}  [{h.sensitivity_label}] {h.source_file} {h.location}")

@@ -1,0 +1,41 @@
+# Role definitions. Deliberately YAML rather than Python: an access
+# policy should be auditable by someone who doesn't read code, and
+# changing who sees what shouldn't require a code change.
+#
+# Enforcement is deny-by-default. A role's allowed_labels is exhaustive;
+# anything not listed is denied.
+
+CEO:
+  description: Full access to all data and all filings.
+  allowed_labels:
+    - PUBLIC_FINANCIAL
+    - SEGMENT_DETAIL
+    - STRATEGY
+    - HR_COMP
+
+CTO:
+  description: >
+    Access to all financial and strategic data, but not headcount or
+    compensation data.
+  allowed_labels:
+    - PUBLIC_FINANCIAL
+    - SEGMENT_DETAIL
+    - STRATEGY
+
+ANALYST:
+  description: >
+    Financial data only. No forward-looking strategy, no HR data,
+    and restricted to FY2024 onward.
+  allowed_labels:
+    - PUBLIC_FINANCIAL
+    - SEGMENT_DETAIL
+  allowed_periods_from: FY2024
+
+AUDITOR:
+  description: >
+    External auditor. Published annual filings only — no quarterlies,
+    no internal data, no forward-looking statements.
+  allowed_labels:
+    - PUBLIC_FINANCIAL
+  allowed_doc_types:
+    - 10-K
