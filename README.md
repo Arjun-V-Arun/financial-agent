@@ -160,8 +160,18 @@ python -m pytest -q
 It proves that CTO cannot retrieve HR chunks, analyst cannot retrieve
 strategy, auditor sees only annual PDFs, unknown roles are denied, a vote
 actually reorders future retrieval (not just that the stored score is
-bounded), and a permitted chunk carrying an injected instruction can't make
-a restricted chunk reachable.
+bounded), and a document carrying an injected instruction can't make a
+restricted chunk reachable.
+
+```powershell
+python scripts/verify_injection_resistance.py
+```
+
+Live-agent counterpart to the injection test above: several direct
+"ignore your restrictions" phrasings sent as the user's actual question,
+checked against a deterministic signal (each citation's real sensitivity
+label) rather than the model's wording. Makes several Groq requests, so it's
+a standalone script rather than part of `pytest -q`.
 
 ## Design choices
 
